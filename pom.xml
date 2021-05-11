@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.3.7.RELEASE</version>
+    </parent>
+    <groupId>com.weymu</groupId>
+    <artifactId>weymu-xlsx</artifactId>
+    <version>1.0.0</version>
+
+    <description>
+        xlsx模块
+    </description>
+    <properties>
+        <!--打包配置 true-上传到远程服务器，false-不上传-->
+        <remoteCopy>true</remoteCopy>
+        <remoteDir>/opt/weymu/weymu-xlsx</remoteDir>
+        <remoteIp>223.240.83.26</remoteIp>
+        <remoteUser>root</remoteUser>
+        <remotePassword>123@abc</remotePassword>
+        <!--开始命令-->
+        <remoteStartCmd>
+            kill -9 `(ps aux | grep weymu-xlsx)| grep -v grep | awk '{print $2}'`;
+            rm -rf ${remoteDir};
+            mkdir -p ${remoteDir};
+        </remoteStartCmd>
+        <!--结束命令-->
+        <remoteEndCmd>
+            cd ${remoteDir};
+            ls;
+            sh start.sh;
+        </remoteEndCmd>
+    </properties>
+
+    <dependencies>
+        <!-- SpringBoot Web容器 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-freemarker</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>4.3.2</version>
+        </dependency>
+
+        <!--能在pom里面写if判断的依赖-->
+        <dependency>
+            <groupId>ant-contrib</groupId>
+            <artifactId>ant-contrib</artifactId>
+            <version>1.0b3</version>
+        </dependency>
+        <!--使用scp功能-->
+        <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant-jsch</artifactId>
+            <version>1.10.7</version>
+        </dependency>
+        <!-- AntRun打包上传 -->
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.55</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <!--打包cloud放开注释-->
+        <!--<finalName>weymu-cloud-ui-1.0.0</finalName>-->
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--复制jar包到指定文件目录,连接服务器,复制文件到服务器-->
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.0.0</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <target>
+                        <!--加载plugin ant-contrib的配置文件-->
+                        <taskdef resource="net/sf/antcontrib/antlib.xml">
+                            <classpath>
+                                <pathelement
+                                        location="${settings.localRepository}\ant-contrib\ant-contrib\1.0b3\ant-contrib-1.0b3.jar"/>
+                            </classpath>
+                        </taskdef>
+                        <path id="jsch.path">
+                            <pathelement
+                                    location="${settings.localRepository}\org\apache\ant\ant-jsch\1.10.7\ant-jsch-1.10.7.jar"/>
+                            <pathelement
+                                    location="${settings.localRepository}\com\jcraft\jsch\0.1.55\jsch-0.1.55.jar"/>
+                        </path>
+                        <taskdef name="sshexec"
+                                 classname="org.apache.tools.ant.taskdefs.optional.ssh.SSHExec"
+                                 classpathref="jsch.path"/>
+                        <taskdef name="scp" classname="org.apache.tools.ant.taskdefs.optional.ssh.Scp"
+                                 classpathref="jsch.path"/>
+                        <!--连接虚拟机  file: 文件路径或者文件名称 command 执行命令 -->
+                        <if>
+                            <equals arg1="${remoteCopy}" arg2="true"/>
+                            <then>
+                                <!--开始命令-->
+                                <sshexec host="${remoteIp}"
+                                         username="${remoteUser}"
+                                         password="${remotePassword}"
+                                         command="${remoteStartCmd}"
+                                         trust="true"/>
+                                <!--上传start文件-->
+                                <scp file="bin\start.sh"
+                                     remotetodir="${remoteUser}:${remotePassword}@${remoteIp}:${remoteDir}"
+                                     trust="true"/>
+                                <!--上传jar文件-->
+                                <scp file="${project.build.directory}\${project.build.finalName}.jar"
+                                     remotetodir="${remoteUser}:${remotePassword}@${remoteIp}:${remoteDir}"
+                                     trust="true"/>
+                            </then>
+                        </if>
+                        <!--结束命令-->
+                        <sshexec host="${remoteIp}"
+                                 username="${remoteUser}"
+                                 password="${remotePassword}"
+                                 command="${remoteEndCmd}"
+                                 trust="true"/>
+                    </target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
