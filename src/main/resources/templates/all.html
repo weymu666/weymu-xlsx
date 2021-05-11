@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线表格</title>
+    <link rel="stylesheet" type="text/css" href="css/normalize.css"/><!--CSS RESET-->
+    <link rel="stylesheet" type="text/css" href="css/htmleaf-demo.css"><!--演示页面样式，使用时可以不引用-->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="htmleaf-container">
+<main id=app>
+<mochi-box shiba="random">
+    <h3>
+        新建表格
+    </h3>
+    <a href="/create"><img src="img/create.png"/></a>
+</mochi-box>
+
+<#list all as wb>
+<mochi-box shiba="random">
+    <h3>
+        <a target="_blank" href="/${wb.id}">${wb.option.title}</a>
+    </h3>
+    <a target="_blank" href="/${wb.id}"> <img src="img/excel.png"/></a>
+</mochi-box>
+</#list>
+</main>
+</div>
+<script src="js/vue@2.6.12.js"></script>
+<script src="js/script.js"></script>
+</body>
+</html>
