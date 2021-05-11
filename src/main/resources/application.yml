@@ -1,0 +1,21 @@
+# 开发环境配置
+server:
+  # 服务器的HTTP端口，默认为8080
+  port: 6083
+
+spring:
+  freemarker:
+    request-context-attribute: request
+    #prefix: /templates/
+    suffix: .html
+    content-type: text/html
+    enabled: true
+    cache: false
+    charset: UTF-8
+    allow-request-override: false
+    expose-request-attributes: true
+    expose-session-attributes: true
+    expose-spring-macro-helpers: true
+  data:
+    mongodb:
+      uri: mongodb://admin:123456@localhost:27017/wb?authSource=admin&readPreference=primary&ssl=false
